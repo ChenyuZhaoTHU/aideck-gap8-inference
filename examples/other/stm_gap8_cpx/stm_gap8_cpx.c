@@ -37,17 +37,32 @@ void start_example(void) {
   cpxEnableFunction(CPX_F_APP);
 
   cpxPrintToConsole(LOG_TO_CRTP, "Starting counter bouncer\n");
-
+  uint8_t time_count = 0;
   while (1) {
     cpxReceivePacketBlocking(CPX_F_APP, &rxPacket);
     uint8_t counterInStm = rxPacket.data[0];
 
     // cpxPrintToConsole(LOG_TO_CRTP, "Got packet from the STM (%u)\n", counterInStm);
+    const TickType_t xDelay = 1000 / portTICK_PERIOD_MS;
+    vTaskDelay(xDelay);
+    time_count += 1;
 
-    // Bounce the same value back to the STM
-    cpxInitRoute(CPX_T_GAP8, CPX_T_STM32, CPX_F_APP, &txPacket.route);
-    txPacket.data[0] = counterInStm;
-    txPacket.dataLength = 1;
+    if(time_count <= 20){
+        // Bounce the same value back to the STM
+        cpxInitRoute(CPX_T_GAP8, CPX_T_STM32, CPX_F_APP, &txPacket.route);
+        txPacket.data[0] = 0;
+        txPacket.dataLength = 1;
+    }
+    else
+    {
+        // Bounce the same value back to the STM
+        cpxInitRoute(CPX_T_GAP8, CPX_T_STM32, CPX_F_APP, &txPacket.route);
+        txPacket.data[0] = 1;
+        txPacket.dataLength = 1;
+    }
+    
+    
+    
 
     cpxSendPacketBlocking(&txPacket);
   }
@@ -56,3 +71,4 @@ void start_example(void) {
 int main(void) {
   return pmsis_kickoff((void *)start_example);
 }
+
